@@ -3,16 +3,23 @@ defmodule Accounting do
   Documentation for `Accounting`.
   """
 
+  
   @doc """
-  Hello world.
+  Receives an invoice in xml format and returns its value.
 
   ## Examples
 
-      iex> Accounting.hello()
-      :world
+      iex> Accounting.get_value("invoices/4387172425.xml")
+      112.79
 
   """
-  def hello do
-    :world
+  def get_value(invoice) do
+    {:ok, fileasstring} = File.read(invoice)
+
+    Regex.run(~r'<vNF>\d+.\d*</vNF>', fileasstring)
+      |> hd
+      |> String.replace(["<vNF>", "</vNF>"], "") 
+      |> String.to_float
   end
+#  NEXT: make vNF a default parameter
 end
