@@ -1,11 +1,18 @@
 defmodule Accounting do
   @moduledoc """
-  Documentation for `Accounting`.
+  This module assumes the existence of a folder invoices/ with all invoices in
+  XML format. To use, just run
+  
+      iex> process_parallel()
+  
   """
 
-  
+  def handle_error(invoice) do
+    IO.puts(:stderr, "#{invoice} does not have a valid vNF field")
+  end
+
   @doc """
-  Receives an invoice in xml format and returns its value.
+  Receives an invoice in XML format and returns its value.
 
   ## Examples
 
@@ -15,17 +22,28 @@ defmodule Accounting do
   """
   def get_value(invoice) do
   #  NEXT: 
-  #  - make vNF a default parameter, perhaps use get_value(invoice, fields \\ ["vNF"])
-  #  - handle errors     
-  
-  # IO.puts(:stderr, "message")
+  #  - make vNF a default parameter, perhaps use get_value(invoice, fields \\ ["vNF"])  
   
     {:ok, fileasstring} = File.read(invoice)
 
-    Regex.run(~r'<vNF>\d+.\d*</vNF>', fileasstring)
-      |> hd
-      |> String.replace(["<vNF>", "</vNF>"], "") 
-      |> String.to_float
+#    Regex.run(~r'<vNF>\d+.\d*</vNF>', fileasstring)
+#      |> hd
+#      |> String.replace(["<vNF>", "</vNF>"], "") 
+#      |> String.to_float
+      
+    case Regex.run(~r'<vNF>\d+.\d*</vNF>', fileasstring) do
+      nil -> handle_error(invoice)
+             0.0
+      [pattern] -> 
+        try do 
+          pattern
+            |> String.replace(["<vNF>", "</vNF>"], "") 
+            |> String.to_float
+        rescue
+          _e in ArgumentError -> handle_error(invoice)
+          0.0
+        end
+    end
   end
   
   def process_sequential() do
@@ -38,5 +56,5 @@ defmodule Accounting do
       |> Task.async_stream(&get_value/1)
       |> Enum.reduce(0.0, fn ({:ok, value}, acc) -> value + acc end)
   end
-
+  
 end
