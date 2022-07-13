@@ -9,6 +9,7 @@ defmodule Accounting do
 
   def handle_error(invoice) do
     IO.puts(:stderr, "#{invoice} does not have a valid vNF field")
+    0.0
   end
 
   @doc """
@@ -33,7 +34,6 @@ defmodule Accounting do
       
     case Regex.run(~r'<vNF>\d+.\d*</vNF>', fileasstring) do
       nil -> handle_error(invoice)
-             0.0
       [pattern] -> 
         try do 
           pattern
@@ -41,7 +41,6 @@ defmodule Accounting do
             |> String.to_float
         rescue
           _e in ArgumentError -> handle_error(invoice)
-          0.0
         end
     end
   end
